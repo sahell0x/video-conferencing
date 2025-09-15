@@ -126,8 +126,7 @@ io.on('connection', (socket) => {
       listenIps: [
         {
           ip: '0.0.0.0',
-          announcedIp: '01ab2476af75.ngrok-free.app',
-        //    announcedIp: process.env.ANNOUNCED_IP || '127.0.0.1',
+          announcedIp: 'meet-api.sahellx.site',
         }
       ],
       enableUdp: true,
