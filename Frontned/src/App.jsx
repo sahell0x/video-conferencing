@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import io from 'socket.io-client';
 import { Device } from 'mediasoup-client';
 
-const API_URL = 'https://01ab2476af75.ngrok-free.app';
+const API_URL = 'https://meet-api.sahellx.site';
 
 function App() {
   const [roomId, setRoomId] = useState('');
