@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import io from 'socket.io-client';
 import { Device } from 'mediasoup-client';
 
-const API_URL = 'https://meet-api.sahellx.site';
+const API_URL = 'https://video-conferencing-ap33.onrender.com';
 
 function App() {
   const [roomId, setRoomId] = useState('');
