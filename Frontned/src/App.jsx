@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import { Device } from 'mediasoup-client';
 
 // const API_URL = 'http://localhost:3001';
-const API_URL = 'https://lypyn9-ip-152-59-31-2.tunnelmole.net';
+const API_URL = 'https://4f577dfc9e09.ngrok-free.app';
 
 
 
