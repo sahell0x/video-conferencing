@@ -126,7 +126,8 @@ io.on('connection', (socket) => {
       listenIps: [
         {
           ip: '0.0.0.0',
-          announcedIp: 'video-conferencing-ap33.onrender.com',
+          announcedIp: 'meeting-api.sahellx.site',
+          // announcedIp: process.env.ANNOUNCED_IP || '127.0.0.1',
         }
       ],
       enableUdp: true,

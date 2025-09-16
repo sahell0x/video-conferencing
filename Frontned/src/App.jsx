@@ -2,7 +2,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import io from 'socket.io-client';
 import { Device } from 'mediasoup-client';
 
-const API_URL = 'https://video-conferencing-ap33.onrender.com';
+// const API_URL = 'http://localhost:3001';
+const API_URL = 'https://meeting-api.sahellx.site';
+
+
 
 function App() {
   const [roomId, setRoomId] = useState('');
@@ -14,6 +17,7 @@ function App() {
   const [peers, setPeers] = useState(new Map());
   const [producers, setProducers] = useState(new Map());
   const [consumers, setConsumers] = useState(new Map());
+  const [remoteStreams, setRemoteStreams] = useState(new Map());
   
   // Use refs for values that need to be accessed in event handlers
   const socketRef = useRef(null);
@@ -40,6 +44,28 @@ function App() {
 
   const handlePeerLeft = useCallback((data) => {
     console.log('Peer left', data);
+    
+    // Remove all video elements for this peer
+    const peerVideoElements = document.querySelectorAll(`[id^="video-peer-${data.peerId}"]`);
+    peerVideoElements.forEach(element => {
+      const stream = element.srcObject;
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      element.remove();
+    });
+    
+    // Clean up remote streams
+    setRemoteStreams(prev => {
+      const newStreams = new Map(prev);
+      for (const [streamId] of newStreams) {
+        if (streamId.includes(data.peerId)) {
+          newStreams.delete(streamId);
+        }
+      }
+      return newStreams;
+    });
+    
     setPeers(prev => {
       const newPeers = new Map(prev);
       newPeers.delete(data.peerId);
@@ -165,24 +191,57 @@ function App() {
       
       setConsumers(prev => new Map(prev).set(consumerId, consumer));
       
-      const stream = new MediaStream();
-      stream.addTrack(consumer.track);
+      // Handle the media stream
+      const track = consumer.track;
+      console.log('Consumer track:', track.kind, track.id);
       
-      // Create video element for remote stream
-      const videoId = `video-${consumerId}`;
-      let videoElement = document.getElementById(videoId);
-      if (!videoElement) {
-        videoElement = document.createElement('video');
-        videoElement.id = videoId;
-        videoElement.autoplay = true;
-        videoElement.playsInline = true;
-        videoElement.className = 'w-48 h-36 bg-gray-800 rounded border-2 border-gray-600';
-        const remoteVideosContainer = document.getElementById('remote-videos');
-        if (remoteVideosContainer) {
-          remoteVideosContainer.appendChild(videoElement);
+      // Group streams by peer
+      const streamId = `peer-${producerId.split('-')[0]}`;
+      
+      setRemoteStreams(prev => {
+        const newStreams = new Map(prev);
+        let stream = newStreams.get(streamId);
+        
+        if (!stream) {
+          stream = new MediaStream();
+          newStreams.set(streamId, stream);
         }
-      }
-      videoElement.srcObject = stream;
+        
+        // Add the track to the stream
+        stream.addTrack(track);
+        
+        // Create or update video element
+        setTimeout(() => {
+          let videoElement = document.getElementById(`video-${streamId}`);
+          if (!videoElement) {
+            videoElement = document.createElement('video');
+            videoElement.id = `video-${streamId}`;
+            videoElement.autoplay = true;
+            videoElement.playsInline = true;
+            videoElement.controls = false;
+            videoElement.muted = false; // Don't mute remote videos
+            videoElement.className = 'w-full h-32 bg-gray-800 rounded border-2 border-gray-600 object-cover';
+            
+            const remoteVideosContainer = document.getElementById('remote-videos');
+            if (remoteVideosContainer) {
+              remoteVideosContainer.appendChild(videoElement);
+              console.log('Created video element:', videoElement.id);
+            }
+          }
+          
+          // Set the stream
+          videoElement.srcObject = stream;
+          
+          // Force play
+          videoElement.play().catch(e => {
+            console.log('Video play failed:', e);
+          });
+          
+          console.log('Set srcObject for:', videoElement.id, 'tracks:', stream.getTracks().length);
+        }, 100);
+        
+        return newStreams;
+      });
       
       if (socketRef.current) {
         socketRef.current.emit('resume-consumer', { consumerId });
@@ -201,10 +260,27 @@ function App() {
 
   const handleConsumerClosed = useCallback((data) => {
     console.log('Consumer closed', data);
-    const videoElement = document.getElementById(`video-${data.consumerId}`);
-    if (videoElement) {
-      videoElement.remove();
-    }
+    
+    // Find and remove the video element
+    const allVideoElements = document.querySelectorAll('[id^="video-peer-"]');
+    allVideoElements.forEach(videoElement => {
+      const stream = videoElement.srcObject;
+      if (stream) {
+        const tracks = stream.getTracks();
+        tracks.forEach(track => {
+          if (track.id === data.consumerId || track.label.includes(data.consumerId)) {
+            track.stop();
+            stream.removeTrack(track);
+          }
+        });
+        
+        // If no tracks left, remove the video element
+        if (stream.getTracks().length === 0) {
+          videoElement.remove();
+        }
+      }
+    });
+    
     setConsumers(prev => {
       const newConsumers = new Map(prev);
       newConsumers.delete(data.consumerId);
@@ -556,8 +632,12 @@ function App() {
               
               <div className="bg-gray-800 p-4 rounded-lg">
                 <h3 className="text-lg font-semibold mb-3">Remote Videos</h3>
-                <div id="remote-videos" className="grid grid-cols-2 gap-2">
-                  {/* Remote video elements will be added here dynamically */}
+                <div id="remote-videos" className="space-y-2 min-h-[200px]">
+                  {remoteStreams.size === 0 && (
+                    <div className="text-gray-400 text-center py-8">
+                      No remote participants yet
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
