@@ -3,6 +3,8 @@ const http = require('http');
 const socketIo = require('socket.io');
 const mediasoup = require('mediasoup');
 const cors = require('cors');
+const publicIp = require('public-ip');
+
 
 const app = express();
 const server = http.createServer(app);
@@ -126,18 +128,13 @@ io.on('connection', (socket) => {
       listenIps: [
         {
           ip: '0.0.0.0',
-          announcedIp: 'meeting-api.sahellx.site',
+          announcedIp: await publicIp.v4(),
           // announcedIp: process.env.ANNOUNCED_IP || '127.0.0.1',
         }
       ],
-      // enableUdp: true,
-      // enableTcp: true,
-      // preferUdp: true,
-
-      //render specific settings
-       enableUdp: false,
+      enableUdp: true,
       enableTcp: true,
-      preferUdp: false,
+      preferUdp: true,
     });
     
     const peer = room.peers.get(socket.id);

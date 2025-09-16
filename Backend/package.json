@@ -11,10 +11,11 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^5.1.0",
-    "socket.io": "^4.7.2",
     "mediasoup": "^3.12.16",
-    "uuid": "^13.0.0",
-    "cors": "^2.8.5"
+    "public-ip": "^7.0.1",
+    "socket.io": "^4.7.2",
+    "uuid": "^13.0.0"
   }
 }
