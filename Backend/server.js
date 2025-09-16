@@ -130,9 +130,14 @@ io.on('connection', (socket) => {
           // announcedIp: process.env.ANNOUNCED_IP || '127.0.0.1',
         }
       ],
-      enableUdp: true,
+      // enableUdp: true,
+      // enableTcp: true,
+      // preferUdp: true,
+
+      //render specific settings
+       enableUdp: false,
       enableTcp: true,
-      preferUdp: true,
+      preferUdp: false,
     });
     
     const peer = room.peers.get(socket.id);
