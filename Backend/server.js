@@ -3,7 +3,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const mediasoup = require('mediasoup');
 const cors = require('cors');
-const publicIp = require('public-ip');
+const {publicIpv4} = require('public-ip');
 
 
 const app = express();
@@ -17,6 +17,8 @@ const io = socketIo(server, {
 
 app.use(cors());
 app.use(express.json());
+(async()=>{console.log("Public IP:", await publicIpv4());})();
+
 
 // Mediasoup configuration
 const mediaCodecs = [
@@ -123,12 +125,13 @@ io.on('connection', (socket) => {
     if (!room) {
       return socket.emit('error', { message: 'Room not found' });
     }
+
     
     const transport = await room.router.createWebRtcTransport({
       listenIps: [
         {
           ip: '0.0.0.0',
-          announcedIp: await publicIp.v4(),
+          announcedIp: await publicIpv4(),
           // announcedIp: process.env.ANNOUNCED_IP || '127.0.0.1',
         }
       ],
