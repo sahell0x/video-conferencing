@@ -3,7 +3,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const mediasoup = require('mediasoup');
 const cors = require('cors');
-const {publicIpv4} = require('public-ip');
+const { publicIpv4 } = require('public-ip');
 
 
 const app = express();
@@ -131,8 +131,8 @@ io.on('connection', (socket) => {
       listenIps: [
         {
           ip: '0.0.0.0',
-          announcedIp: await publicIpv4(),
-          // announcedIp: process.env.ANNOUNCED_IP || '127.0.0.1',
+          announcedIp: '127.0.0.1',
+          // announcedIp: process.env.ANNOUNCED_IP || ( await publicIpv4() ),
         }
       ],
       enableUdp: true,
